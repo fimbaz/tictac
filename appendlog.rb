@@ -5,10 +5,13 @@ require 'json'
 require_relative 'tictac'
 module TicTac
   class AppendLog
-    def initialize(initial_state=Empty_log)
-      @pkey=OpenSSL::PKey::RSA.new(File.read(Private_key))
+    attr_reader :config
+
+    def initialize(initial_state: nil, config: DefaultConfig)
+      @config = config
+      @pkey=OpenSSL::PKey::RSA.new(File.read(config.private_key))
       @log=[]
-      if initial_state == Empty_log
+      if initial_state.nil?
         obj={last_log: nil, payload: ''}
         @log.push(signed_obj(obj))
       else
@@ -30,7 +33,7 @@ module TicTac
       signature=Base64.strict_encode64(@pkey.sign(OpenSSL::Digest::SHA256.new,json_obj))
       signed_obj=JSON.dump({payload: Base64.strict_encode64(json_obj),
                   signature: signature,
-                  signer: File.read(Public_key)
+                  signer: File.read(config.public_key)
                            })
       Open3.popen3("ipfs add -Q") do | i,o,e|
         i.write(signed_obj);i.close;o.read

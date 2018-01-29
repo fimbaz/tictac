@@ -35,7 +35,7 @@ module TicTac
                   signature: signature,
                   signer: File.read(config.public_key)
                            )
-      ipfs_add(str)
+      ipfs_add(signed_obj)
     end
 
     private

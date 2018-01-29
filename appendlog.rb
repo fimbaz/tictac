@@ -24,7 +24,7 @@ module TicTac
 
     def new_entry(obj)
       last_payload=JSON.parse(%x(ipfs cat #{@log.last}),symbolize_names: true)
-      obj[:last_log]=@last_entry
+      obj[:last_log]=last_entry
       sobj=insert_signed_obj(obj)
       push(sobj)
     end

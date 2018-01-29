@@ -21,17 +21,24 @@ module TicTac
       last_payload=JSON.parse(%x(ipfs cat #{@log.last}),symbolize_names: true)
       obj[:last_sig]=last_payload[:signature]
       obj[:last_log]=@log.last
-      sobj=signed_obj(obj)
-      @log.push(sobj)
+
+      signed_obj(obj).tap do |signed|
+        commit(signed)
+        @log.push(signed)
+      end
 
     end
     def signed_obj(obj)
       json_obj=JSON.dump(obj)
       signature=Base64.strict_encode64(@pkey.sign(OpenSSL::Digest::SHA256.new,json_obj))
-      signed_obj=JSON.dump({payload: Base64.strict_encode64(json_obj),
-                  signature: signature,
-                  signer: File.read(Public_key)
-                 })
+      signed_obj=JSON.dump(
+        payload: Base64.strict_encode64(json_obj),
+        signature: signature,
+        signer: File.read(Public_key)
+      )
+    end
+
+    def commit(str)
       %x(ipfs add -Q <<<  '#{signed_obj}')
     end
   end

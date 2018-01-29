@@ -31,12 +31,18 @@ module TicTac
     def signed_obj(obj)
       json_obj=JSON.dump(obj)
       signature=Base64.strict_encode64(@pkey.sign(OpenSSL::Digest::SHA256.new,json_obj))
-      signed_obj=JSON.dump({payload: Base64.strict_encode64(json_obj),
+      signed_obj=JSON.dump(payload: Base64.strict_encode64(json_obj),
                   signature: signature,
                   signer: File.read(config.public_key)
-                           })
+                           )
+      ipfs_add(str)
+    end
+
+    private
+
+    def ipfs_add(str)
       Open3.popen3("ipfs add -Q") do | i,o,e|
-        i.write(signed_obj);i.close;o.read
+        i.write(str);i.close;o.read
       end
     end
   end
